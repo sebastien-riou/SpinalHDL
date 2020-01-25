@@ -707,8 +707,15 @@ object SpiXdrMasterCtrl {
 
 
       //Set MOSI signals
-      io.spi.data.foreach(_.writeEnable.allowOverride := False)
-      io.spi.data.foreach(_.write.assignDontCare())
+      io.spi.data.indices.foreach(i => {
+          if(i<2){
+              io.spi.data(i).writeEnable.allowOverride := False
+              io.spi.data(i).write.assignDontCare()
+          }else{//Pins used as WP and HOLD in normal SPI mode, need them to be high.
+              io.spi.data(i).writeEnable.allowOverride := True
+              io.spi.data(i).write := B(io.spi.data(i).write.getWidth bits, default -> True)
+          }
+      })
       switch(io.config.mod){
         for(mod <- p.mods){
           is(mod.id) {
@@ -719,8 +726,16 @@ object SpiXdrMasterCtrl {
                 io.spi.data(mapping.pin).write(mapping.phase) := dataWrite(mapping.source) || !doWrite
               }
             } else {
-              when(doWrite){
-                mod.writeMapping.map(_.pin).distinct.foreach(i => io.spi.data(i).writeEnable := True)
+              if(mod.writeMapping.length>2){
+                when(doWrite){
+                  mod.writeMapping.map(_.pin).distinct.foreach(i => io.spi.data(i).writeEnable := True)
+                } otherwise {
+                  mod.writeMapping.map(_.pin).distinct.foreach(i => io.spi.data(i).writeEnable := False)
+                }
+              }else{
+                when(doWrite){
+                  mod.writeMapping.map(_.pin).distinct.foreach(i => io.spi.data(i).writeEnable := True)
+                }
               }
               for (mapping <- mod.writeMapping) {
                 io.spi.data(mapping.pin).write(mapping.phase) := dataWrite(mapping.source)
