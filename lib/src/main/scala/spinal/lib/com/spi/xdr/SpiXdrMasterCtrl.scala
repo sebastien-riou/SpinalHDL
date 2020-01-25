@@ -726,6 +726,7 @@ object SpiXdrMasterCtrl {
                 io.spi.data(mapping.pin).write(mapping.phase) := dataWrite(mapping.source) || !doWrite
               }
             } else {
+              println("SpinalHDL fork")
               if(mod.writeMapping.length>2){
                 when(doWrite){
                   mod.writeMapping.map(_.pin).distinct.foreach(i => io.spi.data(i).writeEnable := True)
@@ -790,4 +791,3 @@ object SpiXdrMasterCtrl {
     }
   }
 }
-
