@@ -21,7 +21,7 @@ class UartCtrlRx(g : UartCtrlGenerics) extends Component {
   }
 
   io.error := False
-  io.rts := RegNext(io.read.ready) init(True)
+  io.rts := RegNext(!io.read.ready) init(False)
 
   // Implement the rxd sampling with a majority vote over samplingSize bits
   // Provide a new sampler.value each time sampler.tick is high
@@ -61,7 +61,7 @@ class UartCtrlRx(g : UartCtrlGenerics) extends Component {
 
   val break = new Area{
     val stateCount = g.rxSamplePerBit*(1+8+1+2+1)
-    val counter = Reg(UInt(log2Up(stateCount+1) bits))
+    val counter = Reg(UInt(log2Up(stateCount+1) bits)) init(0)
     val valid = counter === stateCount
     when(sampler.value){
       counter := 0
